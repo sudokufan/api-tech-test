@@ -4,6 +4,7 @@ const config = require("config");
 const request = require("request");
 const axios = require("axios");
 const R = require("ramda");
+const csvConverter = require("json-2-csv");
 
 const app = express();
 
@@ -55,18 +56,23 @@ app.get("/report", async (req, res) => {
       }, investment.holdings);
     }, investments.data);
 
-    res.send(report);
+    // convert json to csv
+    const csv = await csvConverter.json2csv(report);
 
-    // await axios.post(
-    //   `${config.investmentsServiceUrl}/investments/export`,
-    //   report,
-    //   {
-    //     headers: {
-    //       "Content-Type": "application/json",
-    //     },
-    //   }
-    // );
-    // res.send("Report successfully generated");
+    // wrap csv in new json object
+    const csvJsonExport = { csv: `'${csv}'` };
+
+    // send to /export endpoint
+    await axios.post(
+      `${config.investmentsServiceUrl}/investments/export`,
+      csvJsonExport,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    res.send("Report successfully generated");
   } catch (err) {
     console.error("Error generating report", err);
     res.status(500).send({

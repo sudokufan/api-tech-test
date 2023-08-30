@@ -25,7 +25,7 @@ app.get("/investments/:id", async (req, res) => {
   }
 });
 
-app.get("/report", async (req, res) => {
+app.post("/investments/report", async (req, res) => {
   try {
     const [investments, companies] = await axios.all([
       axios.get(`${config.investmentsServiceUrl}/investments`),
